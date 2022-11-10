@@ -120,8 +120,8 @@ int numberLeaves(Node *N){
 
 int countAndTotal(Node *N, int *count, int *total){
 	if (N != NULL){
-        countAndTotal(N->right, count, total);
-		*total += N->data;
+        	countAndTotal(N->right, count, total);
+	*total += N->data;
         (*count) ++;
         countAndTotal(N->left, count, total);
     }
@@ -136,7 +136,7 @@ int countNodes(Node *N){
 
 Node* freeSubtree(Node *N) {
   if (N == NULL)
-    return;
+    return NULL;
   freeSubtree(N->left);
   freeSubtree(N->right);
   free(N);
@@ -207,16 +207,17 @@ float avgSubtree(Node *N){
 	int count = 0;
 	int total = 0;
 	countAndTotal(N, &count, &total);
-	return total / count;
+	return (float)total / count;
 }
 
-void makeSubtree(Node *N, int *nodeList, int l, int r){
+Node* makeSubtree(Node *root, int *nodeList, int l, int r){
 	 if (l < r) {
         int middle = l + (r - l) / 2;
-		addNode(N, nodeList[middle]);
-        makeSubtree(N, nodeList, l, middle);
-        makeSubtree(N, nodeList, middle + 1, r);
-    }
+		root = addNode(root, nodeList[middle]);
+        makeSubtree(root, nodeList, l, middle);
+        makeSubtree(root, nodeList, middle + 1, r);
+        }
+    return root;
 }
 
 // This functions converts an unbalanced BST to a balanced BST
@@ -226,6 +227,6 @@ Node* balanceTree(Node* root){
 	int index = 0;
 	inOrderTraversal(root, nodeList, &index);
 	//freeSubtree(root);
-	makeSubtree(NULL, nodeList, 0, count - 1);
+	root = makeSubtree(NULL, nodeList, 0, count);
 	return root;
 }
