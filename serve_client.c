@@ -8,7 +8,6 @@ pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 void *downtime() {
     for (int i = 0; i<3; i++){
         pthread_mutex_lock(&mutex1);
-        printf("down");
         Node *temp = root;
         root = balanceTree(root);
         freeSubtree(temp);
@@ -23,31 +22,37 @@ void *ServeClient(char *client) {
     fp = fopen(client, "r");
     char func[100];
     int data;
+    //const char s[2] = "_";
+    //char token[strlen(client)];
+    char *token;
+    char str[strlen(client)];
+    strcpy(str, client);
+    token = strtok(str, "_");
+    
     while (fscanf(fp, "%s %d", func, &data) != EOF){
         if (!strcmp(func, "addNode")){
             pthread_mutex_lock(&mutex1);
-            printf("[%s]insertNode <%d>\n", client, data);
+            printf("%sinsertNode %d\n", token, data);
             root = addNode(root, data);
             pthread_mutex_unlock(&mutex1);
         }
         else if (!strcmp(func, "removeNode")){
             pthread_mutex_lock(&mutex1);
-            printf("[%s]deleteNodeNode <%d>\n", client, data);
+            printf("%sdeleteNodeNode %d\n", token, data);
             root = removeNode(root, data);
             pthread_mutex_unlock(&mutex1);
         }
         else if (!strcmp(func, "countNodes")){
-            printf("1");
-            pthread_mutex_lock(&mutex1);
-            printf("[%s]countNodes = <%d>\n", client, countNodes(root));
-            pthread_mutex_unlock(&mutex1);
+            //pthread_mutex_lock(&mutex1);
+            printf("%scountNodes = %d\n", token, countNodes(root));
+            //pthread_mutex_unlock(&mutex1);
         }
         else if (!strcmp(func, "avgSubtree")){
-            printf("2");
-            pthread_mutex_lock(&mutex1);
-            printf("[%s]avgSubtree = <%f>\n", client, avgSubtree(root));
-            pthread_mutex_unlock(&mutex1);
+            //pthread_mutex_lock(&mutex1);
+            printf("%savgSubtree = %f\n", token, avgSubtree(root));
+            //pthread_mutex_unlock(&mutex1);
         }
     }
+    fclose(fp);
     return NULL;
 }
