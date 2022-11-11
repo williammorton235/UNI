@@ -47,7 +47,7 @@ Node *addNode(Node *root, int data){
     return root;
 }
 
-Node* removeNode(Node *root, int value){
+Node* removeNodeold(Node *root, int value){
     if (value < root->data){
         root->right = removeNode(root->right, value);
     }
@@ -96,6 +96,50 @@ Node* removeNode(Node *root, int value){
         }
     }
     return root;
+}
+
+Node* removeNode(Node* root, int data)
+{
+  // Ensure root isn't null.
+  if (root == NULL) {
+    return NULL;
+  }
+  
+  if (data > root->data) {  // Value is in the left sub-tree.
+    root->left = removeNode(root->left, data);
+  } else if (data < root->data) { // Value is in the right sub-tree.
+    root->right = removeNode(root->right, data);
+  } else { // Found the correct node with value
+    // Check the three cases - no child, 1 child, 2 child...
+    // No Children
+    if (root->left == NULL && root->right == NULL) {
+      free(root);
+      root = NULL;
+    }
+    // 1 child (on the right)
+    else if (root->left == NULL) {
+      Node *temp = root; // save current node
+      root = root->right;
+      free(temp);
+    }
+    // 1 child (on the left)
+    else if (root->right == NULL) {
+      Node *temp = root; // save current node
+      root = root->left;
+      free(temp);
+    }
+    // Two children
+    else {
+      // find minimal value of right sub tree
+      Node *temp = root->left; 
+      while(temp->right != NULL) {
+        temp = temp->right;
+      }
+      root->data = temp->data; // duplicate the node
+      root->left = removeNode(root->left, root->data); // delete the duplicate node
+    }
+  }
+  return root; // parent node can update reference
 }
 
 void displaySubtree(Node * N){
@@ -207,6 +251,9 @@ float avgSubtree(Node *N){
 	int count = 0;
 	int total = 0;
 	countAndTotal(N, &count, &total);
+	if (count == 0){
+		return -1;
+	}
 	return (float)total / count;
 }
 
