@@ -87,6 +87,12 @@ void cleanup_module(void)
 {
 	/*  Unregister the device */
 	// need to free the messages
+	while (head != NULL){
+	    node *temp = head;
+	    head = head -> next;
+	    kfree(temp);
+	}
+	
 	unregister_chrdev(Major, DEVICE_NAME);
 }
 
@@ -139,7 +145,8 @@ static ssize_t device_read(struct file *filp,	/* see include/linux/fs.h   */
 			   loff_t * offset)
 {
 	/* result of function calls */
-	int result;
+	//int result;
+	node *temp = NULL;
 
 
 	/* 
@@ -149,7 +156,8 @@ static ssize_t device_read(struct file *filp,	/* see include/linux/fs.h   */
 	if (n == 0)
 		return -EAGAIN;
 	
-	node *temp = head -> next;
+	mutex_lock (&devLock);
+	temp = head -> next;
 	//char *returnMessage;
 	strcpy(msg, head -> message);
 	kfree(head);
@@ -157,12 +165,12 @@ static ssize_t device_read(struct file *filp,	/* see include/linux/fs.h   */
 	n--;
 	//return returnMessage;
 		
-	result = copy_to_user(buffer, msg + *offset, length);
-	if (result > 0) 
+	if (copy_to_user(buffer, msg + *offset, length))
 	    return -EFAULT; /* copy failed */
 	/* 
 	 * Most read functions return the number of bytes put into the buffer
 	 */
+	mutex_unlock (&devLock);
 	return length;
 }
 
@@ -170,16 +178,20 @@ static ssize_t device_read(struct file *filp,	/* see include/linux/fs.h   */
 static ssize_t
 device_write(struct file *filp, const char *buff, size_t len, loff_t * off)
 {
-	if (len + 1 > 4096)
+	node *new = NULL;
+	
+	if (len > 4096)
 	    return -EINVAL;
 	if (n == 1000)
 	    return -EBUSY;
 	
 	n++;
-	node *new = kmalloc(sizeof(node), GFP_KERNEL);
+	new = kmalloc(sizeof(node), GFP_KERNEL);
 	new -> next = NULL;
 	new -> message = kmalloc(len, GFP_KERNEL);
-	copy_from_user(new -> message, buff, len);
+	if (copy_from_user(new -> message, buff, len))
+		return -EFAULT;
+	mutex_lock (&devLock);
 	if (end == NULL){
 		end = new;
 	}
@@ -190,5 +202,6 @@ device_write(struct file *filp, const char *buff, size_t len, loff_t * off)
 	
 	if (head == NULL)
 		head = new;
+	mutex_unlock (&devLock);
 	return len;
 }
